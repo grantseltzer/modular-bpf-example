@@ -4,14 +4,19 @@
 #include <bpf/bpf_core_read.h>
 
 #include "maps.bpf.h"
-#include "types.h"
 
 SEC("fentry/do_unlinkat")
-int BPF_PROG(do_unlinkat, int dfd, struct filename *name)
+int fentry__do_unlinkat()
 {
-    struct event *e;
+    int *e;
 	e = bpf_ringbuf_reserve(&events, sizeof(*e), 0);
-    e->x = 1;
+    if (!e) {
+        return 0;
+    }
+    *e = 1;
+
+    bpf_ringbuf_submit(e, 0);
+
 	return 0;
 }
 

@@ -4,14 +4,19 @@
 #include <bpf/bpf_core_read.h>
 
 #include "maps.bpf.h"
-#include "types.h"
 
 SEC("fexit/do_unlinkat")
 int fexit__do_unlinkat() 
 {
-    struct event *e;
+    int *e;
 	e = bpf_ringbuf_reserve(&events, sizeof(*e), 0);
-    e->x = 2;
+    if (!e) {
+        return 0;
+    }
+    *e = 2;
+
+    bpf_ringbuf_submit(e, 0);
+
 	return 0;
 }
 

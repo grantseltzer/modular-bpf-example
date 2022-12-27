@@ -1,3 +1,0 @@
-struct event {
-	int x;
-};
