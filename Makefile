@@ -12,7 +12,7 @@ CFLAGS := -g -O2 -Wall
 CLANG := clang
 BPFTOOL := bpftool
 
-all: $(OUTPUT)/first.bpf.o $(OUTPUT)/second.bpf.o $(OUTPUT)/example
+all: $(OUTPUT)/first.bpf.o $(OUTPUT)/second.bpf.o $(OUTPUT)/maps.bpf.o $(OUTPUT)/example
 
 .PHONY: $(LIBBPF_OBJ)
 $(LIBBPF_OBJ): $(wildcard $(LIBBPF_SRC)/*.[ch] $(LIBBPF_SRC)/Makefile)
@@ -28,6 +28,10 @@ $(OUTPUT)/first.bpf.o: programs/first.bpf.c $(LIBBPF_OBJ)
 $(OUTPUT)/second.bpf.o: programs/second.bpf.c $(LIBBPF_OBJ)
 	$(CLANG) -g -O2 -target bpf -D__TARGET_ARCH_$(ARCH) $(INCLUDES) -c programs/second.bpf.c -o $@
 	$(BPFTOOL) gen skeleton $@ > $(OUTPUT)/second.skel.h
+
+$(OUTPUT)/maps.bpf.o: programs/maps.bpf.c $(LIBBPF_OBJ)
+	$(CLANG) -g -O2 -target bpf -D__TARGET_ARCH_$(ARCH) $(INCLUDES) -c programs/maps.bpf.c -o $@
+	$(BPFTOOL) gen skeleton $@ > $(OUTPUT)/maps.skel.h
 
 $(OUTPUT)/example: $(OUTPUT)/first.bpf.o $(OUTPUT)/second.bpf.o
 	$(CLANG) programs/modular.c $(LIBBPF_OBJ) -lelf -lz $(INCLUDES) -o $@
