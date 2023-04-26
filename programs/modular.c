@@ -1,6 +1,4 @@
-#include "first.skel.h"
-#include "second.skel.h"
-#include "maps.skel.h"
+#include "use_vm.skel.h"
 #include <signal.h>
 #include <stdio.h>
 
@@ -27,32 +25,17 @@ int main()
 
 	struct ring_buffer *rb = NULL;
     
-    struct first_bpf *first_skel;
-    struct second_bpf *second_skel;
-    struct maps_bpf *map_skel;
+    struct use_vm_bpf *use_vm_skel;
 
-    map_skel = maps_bpf__open_and_load();
-    if (!map_skel) {
-        fprintf(stderr, "Failed to open BPF skeleton\n");
-		return 1;
-    }
-
-    first_skel = first_bpf__open_and_load();
-    if (!first_skel) {
+    use_vm_skel = use_vm_bpf__open_and_load();
+    if (!use_vm_skel) {
 		fprintf(stderr, "Failed to open BPF skeleton\n");
 		return 1;
 	}
 
-    second_skel = second_bpf__open_and_load();
-    if (!second_skel) {
-		fprintf(stderr, "Failed to open BPF skeleton\n");
-		return 1;
-	}
+    use_vm_bpf__attach(use_vm_skel);
 
-    first_bpf__attach(first_skel);
-    second_bpf__attach(second_skel);
-
-    rb = ring_buffer__new(bpf_map__fd(second_skel->maps.events), handle_event, NULL, NULL);
+    rb = ring_buffer__new(bpf_map__fd(use_vm_skel->maps.events), handle_event, NULL, NULL);
 
     while(!exiting) {
         err = ring_buffer__poll(rb, 100);
@@ -66,5 +49,5 @@ int main()
  		}
  	}
 
-    bpf_object__unpin_maps(map_skel->obj, "/sys/fs/bpf");
+    bpf_object__unpin_maps(use_vm_skel->obj, "/sys/fs/bpf");
 }
